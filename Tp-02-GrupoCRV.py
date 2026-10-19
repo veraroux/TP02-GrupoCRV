@@ -119,13 +119,14 @@ print(pixeles_menos_intesos)
 
 dic_valores = {}
 for c in range (10): 
-    dic_valores[f'Clase {c}'] = X[Y== c].mean().sort_values(ascending = False).head(10)
+    dic_valores[f'Clase {clases.loc[c, "nombre"]}'] = X[Y== c].mean().sort_values(ascending = False).head(10)
 
 pixeles_mas_intesos = pd.DataFrame(dic_valores)
 
 print(pixeles_mas_intesos)
 
 #%% Pixeles entre clases similares ver intensidades que diferencien: 
+    
 
 #%% Diferencias entre 0(circulo) y 7 (paraguas)
 
@@ -298,3 +299,30 @@ que oscurece la zona. La diferencia aparece en la parte media e inferior: la
 remera conserva los laterales del cuerpo, y el pez es más ancho y difuso en 
 el centro.
 """
+
+#%%
+
+dic_diferencias = {}
+for c in range (10): 
+    for i in range(c+1, 10): 
+        
+        dic_diferencias[f'Clase {clases.loc[c, "nombre"]} - Clase {clases.loc[i, "nombre"]}'] =  (X[Y == c].mean() - X[Y == i].mean()).abs().nlargest(10)
+
+diferencias_mas_intesas = pd.DataFrame(dic_diferencias)
+
+print(diferencias_mas_intesas)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
