@@ -390,22 +390,22 @@ k = 5
 
 subconjuntos = [["pixel45", "pixel46", "pixel47"], ["pixel338", "pixel310", "pixel366"], 
                 ["pixel47", "pixel48", "pixel49"], ["pixel46", "pixel338", "pixel48"]]
-resultados = []
+resultados_3 = []
 
 for cols in subconjuntos:
     knn = KNeighborsClassifier(n_neighbors= k)
-    knn .fit(X_train[cols], Y_train)
+    knn.fit(X_train[cols], Y_train)
     Y_pred = knn.predict(X_test[cols])
     acc = accuracy_score(Y_test, Y_pred)
     precision = precision_score(Y_test, Y_pred, pos_label=9)
     recall = recall_score(Y_test, Y_pred, pos_label=9)
     
     print(f"atributos={cols}: exactitud={acc:.3f}, precision={precision:.3f}, recall={recall:.3f}")
-    resultados.append({'atributos': str(cols), 'accuracy': acc,
+    resultados_3.append({'atributos': str(cols), 'accuracy': acc,
                        'precision': precision, 'recall': recall})
 
-tabla_resultados = pd.DataFrame(resultados)
-print(tabla_resultados)
+tabla_resultados_3 = pd.DataFrame(resultados_3)
+print(tabla_resultados_3)
 
 
 
@@ -416,50 +416,68 @@ k = 5
 subconjuntos = [["pixel45", "pixel46", "pixel47", "pixel44", "pixel48", "pixel43"], 
                 ["pixel338", "pixel310", "pixel366", "pixel283", "pixel394", "pixel365"], 
                 ["pixel47", "pixel48", "pixel49", "pixel46", "pixel50", "pixel45"], 
-                ["pixel46","pixel45" "pixel338", "pixel310", "pixel48", "pixel47"]]
-resultados = []
+                ["pixel46","pixel45" ,"pixel338", "pixel310", "pixel48", "pixel47"]]
+resultados_6 = []
 
 for cols in subconjuntos:
     knn = KNeighborsClassifier(n_neighbors= k)
     knn .fit(X_train[cols], Y_train)
     Y_pred = knn.predict(X_test[cols])
-    acc = accuracy_score(Y_test[cols], Y_pred)
-    precision = precision_score(Y_test[cols], Y_pred, pos_label=9)
-    recall = recall_score(Y_test[cols], Y_pred, pos_label=9)
+    acc = accuracy_score(Y_test, Y_pred)
+    precision = precision_score(Y_test, Y_pred, pos_label=9)
+    recall = recall_score(Y_test, Y_pred, pos_label=9)
     
     print(f"atributos={cols}: exactitud={acc:.3f}, precision={precision:.3f}, recall={recall:.3f}")
-    resultados.append({'atributos': str(cols), 'accuracy': acc,
+    resultados_6.append({'atributos': str(cols), 'accuracy': acc,
                        'precision': precision, 'recall': recall})
 
-tabla_resultados = pd.DataFrame(resultados)
-print(tabla_resultados)
+tabla_resultados_6 = pd.DataFrame(resultados_6)
+print(tabla_resultados_6)
 
 #%% UN K FIJO, CONJUNTOS DE 10 ATRIBUTOS     
 
 k = 5
 
 subconjuntos = [["pixel40", "pixel41", "pixel42", "pixel49", "pixel45", "pixel46", "pixel47", "pixel44", "pixel48", "pixel43"], 
-                ["pixel225", "pixel282", "pixel311", "pixel283", "pixel365", "pixel393", "pixel394", "pixel283", "pixel366", "pixel310", "pixel338"], 
+                ["pixel225", "pixel282", "pixel311", "pixel283", "pixel365", "pixel393", "pixel394", "pixel366", "pixel310", "pixel338"], 
                 ["pixel51", "pixel113", "pixel169", "pixel141", "pixel45", "pixel50", "pixel46", "pixel49", "pixel47", "pixel48"], 
-                ["pixel46","pixel49", "pixel48" "pixel338", "pixel310", "pixel47", "pixel47", "pixel40", "pixel282", "pixel311", "pixel283"]]
-resultados = []
+                ["pixel46","pixel49", "pixel48" ,"pixel338", "pixel310", "pixel47", "pixel40", "pixel282", "pixel311", "pixel283"]]
+resultados_10 = []
 
 for cols in subconjuntos:
     knn = KNeighborsClassifier(n_neighbors= k)
-    knn .fit(X_train[cols], Y_train)
+    knn.fit(X_train[cols], Y_train)
     Y_pred = knn.predict(X_test[cols])
-    acc = accuracy_score(Y_test[cols], Y_pred)
-    precision = precision_score(Y_test[cols], Y_pred, pos_label=9)
-    recall = recall_score(Y_test[cols], Y_pred, pos_label=9)
+    acc = accuracy_score(Y_test, Y_pred)
+    precision = precision_score(Y_test, Y_pred, pos_label=9)
+    recall = recall_score(Y_test, Y_pred, pos_label=9)
     
     print(f"atributos={cols}: exactitud={acc:.3f}, precision={precision:.3f}, recall={recall:.3f}")
-    resultados.append({'atributos': str(cols), 'accuracy': acc,
+    resultados_10.append({'atributos': str(cols), 'accuracy': acc,
                        'precision': precision, 'recall': recall})
 
-tabla_resultados = pd.DataFrame(resultados)
-print(tabla_resultados)
+tabla_resultados_10 = pd.DataFrame(resultados_10)
+print(tabla_resultados_10)
 
 
+
+
+resultados_dif_k = []
+
+#Cantidad diferente de atributos pero con distintas combinaciones?
+for k in [3,5,10,15,30]:
+    for cols in subconjuntos: #(este es el ult de cant 10): 
+        knn = KNeighborsClassifier(n_neighbors= k)
+        knn.fit(X_train[cols], Y_train)
+        Y_pred = knn.predict(X_test[cols])
+        acc = accuracy_score(Y_test, Y_pred)
+        precision = precision_score(Y_test, Y_pred, pos_label=9)
+        recall = recall_score(Y_test, Y_pred, pos_label=9)
+        resultados_dif_k.append({'K': k , 'atributos': str(cols), 'accuracy': acc,
+                           'precision': precision, 'recall': recall})
+        
+tabla_resultados_dif_k = pd.DataFrame(resultados_dif_k)
+print(tabla_resultados_dif_k) 
 
 
 
