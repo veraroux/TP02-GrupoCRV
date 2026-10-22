@@ -18,6 +18,11 @@ import duckdb as dd
 import os
 import matplotlib.pyplot as plt 
 import numpy as np
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, recall_score
+from matplotlib.colors import ListedColormap
+
 
 SEMILLA = 42    
 
@@ -314,8 +319,145 @@ print(diferencias_mas_intesas)
 
 
 
+#%% # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+ # #                                                                     # #
+# #   CLASIFICACIÓN BINARIA                                              # #
+ # #                                                                     # # 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+#%% =============================================================================
+# Armado del DataFrame 
+# ===============================================================================
+consulta_df_binario = """
+                      SELECT *
+                      FROM imagenes 
+                      WHERE label = 2 OR label = 9 
+                      """
 
 
+df_clas_binaria= dd.sql(consulta_df_binario).df()
+
+print(df_clas_binaria)
+
+#%% =============================================================================
+# Análisis de la cantidad de muestras 
+# ===============================================================================
+#%% Cantidad de muestras de la clase 2: 3085
+cant_muestras_cuadrado = """
+                        SELECT COUNT(*),
+                        FROM df_clas_binaria
+                        WHERE label = 2
+                            """
+cant_cuadrado = dd.sql(cant_muestras_cuadrado).df()
+print(cant_cuadrado)
+
+#%% Cantidad de muestras de la clase 9: 2945
+cant_muestras_casa= """
+                        SELECT COUNT(*),
+                        FROM df_clas_binaria
+                        WHERE label = 9
+                            """
+cant_casa = dd.sql(cant_muestras_casa).df()
+print(cant_casa)
+
+#%% =============================================================================
+# Separación en Train y Test  
+# ===============================================================================
+
+X = df_clas_binaria.drop(columns="label")
+Y = df_clas_binaria["label"]
+
+X_train, X_test, Y_train, Y_test = train_test_split(
+    X, Y, test_size=0.2, random_state=42, stratify=Y
+)
+
+#%% =============================================================================
+# Ajustar el KNN con diferentes cantidades de atributos   
+# ===============================================================================
+ 
+#%% UN K FIJO, CONJUNTOS DE 3 ATRIBUTOS     
+k = 5
+
+# Pixeles mas brillantes de la clase 2: del 40 al 49
+# Pixeles mas brillantes de la clase 9: 225, 282, 311, 283, 365, 393, 394, 283, 366, 310, 338
+#Pixeles de mayor diferencia de intensidad entre las clases: 51, 113, 169, 141,45, 50, 46, 49, 47, 48
+#La mayoría de los pixeles que tienen mayor diferencia se encuentran entre los mas brillantes de la clase 2
+#por lo que tambien deben ser de los menos brillantes en la clase 9. 
+
+subconjuntos = [["pixel45", "pixel46", "pixel47"], ["pixel338", "pixel310", "pixel366"], 
+                ["pixel47", "pixel48", "pixel49"], ["pixel46", "pixel338", "pixel48"]]
+resultados = []
+
+for cols in subconjuntos:
+    knn = KNeighborsClassifier(n_neighbors= k)
+    knn .fit(X_train[cols], Y_train)
+    Y_pred = knn.predict(X_test[cols])
+    acc = accuracy_score(Y_test, Y_pred)
+    precision = precision_score(Y_test, Y_pred, pos_label=9)
+    recall = recall_score(Y_test, Y_pred, pos_label=9)
+    
+    print(f"atributos={cols}: exactitud={acc:.3f}, precision={precision:.3f}, recall={recall:.3f}")
+    resultados.append({'atributos': str(cols), 'accuracy': acc,
+                       'precision': precision, 'recall': recall})
+
+tabla_resultados = pd.DataFrame(resultados)
+print(tabla_resultados)
+
+
+
+#%% UN K FIJO, CONJUNTOS DE 6 ATRIBUTOS     
+
+k = 5
+
+subconjuntos = [["pixel45", "pixel46", "pixel47", "pixel44", "pixel48", "pixel43"], 
+                ["pixel338", "pixel310", "pixel366", "pixel283", "pixel394", "pixel365"], 
+                ["pixel47", "pixel48", "pixel49", "pixel46", "pixel50", "pixel45"], 
+                ["pixel46","pixel45" "pixel338", "pixel310", "pixel48", "pixel47"]]
+resultados = []
+
+for cols in subconjuntos:
+    knn = KNeighborsClassifier(n_neighbors= k)
+    knn .fit(X_train[cols], Y_train)
+    Y_pred = knn.predict(X_test[cols])
+    acc = accuracy_score(Y_test[cols], Y_pred)
+    precision = precision_score(Y_test[cols], Y_pred, pos_label=9)
+    recall = recall_score(Y_test[cols], Y_pred, pos_label=9)
+    
+    print(f"atributos={cols}: exactitud={acc:.3f}, precision={precision:.3f}, recall={recall:.3f}")
+    resultados.append({'atributos': str(cols), 'accuracy': acc,
+                       'precision': precision, 'recall': recall})
+
+tabla_resultados = pd.DataFrame(resultados)
+print(tabla_resultados)
+
+#%% UN K FIJO, CONJUNTOS DE 10 ATRIBUTOS     
+
+k = 5
+
+subconjuntos = [["pixel40", "pixel41", "pixel42", "pixel49", "pixel45", "pixel46", "pixel47", "pixel44", "pixel48", "pixel43"], 
+                ["pixel225", "pixel282", "pixel311", "pixel283", "pixel365", "pixel393", "pixel394", "pixel283", "pixel366", "pixel310", "pixel338"], 
+                ["pixel51", "pixel113", "pixel169", "pixel141", "pixel45", "pixel50", "pixel46", "pixel49", "pixel47", "pixel48"], 
+                ["pixel46","pixel49", "pixel48" "pixel338", "pixel310", "pixel47", "pixel47", "pixel40", "pixel282", "pixel311", "pixel283"]]
+resultados = []
+
+for cols in subconjuntos:
+    knn = KNeighborsClassifier(n_neighbors= k)
+    knn .fit(X_train[cols], Y_train)
+    Y_pred = knn.predict(X_test[cols])
+    acc = accuracy_score(Y_test[cols], Y_pred)
+    precision = precision_score(Y_test[cols], Y_pred, pos_label=9)
+    recall = recall_score(Y_test[cols], Y_pred, pos_label=9)
+    
+    print(f"atributos={cols}: exactitud={acc:.3f}, precision={precision:.3f}, recall={recall:.3f}")
+    resultados.append({'atributos': str(cols), 'accuracy': acc,
+                       'precision': precision, 'recall': recall})
+
+tabla_resultados = pd.DataFrame(resultados)
+print(tabla_resultados)
 
 
 
