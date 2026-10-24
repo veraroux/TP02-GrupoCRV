@@ -19,9 +19,11 @@ import os
 import matplotlib.pyplot as plt 
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, KFold, cross_validate, cross_val_score, cross_val_predict
 from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, recall_score
 from matplotlib.colors import ListedColormap
+from sklearn.tree import DecisionTreeClassifier, plot_tree
+import seaborn as sns
 
 
 SEMILLA = 42    
@@ -64,7 +66,8 @@ print(imagenes.shape)
 # 784 pixeles (de 0 a 783)
 #30000 imágenes 
 
-#%% Cantidad de imágenes por clase: 
+#%% Vemos si las clases estan balanceadas:
+
 
 cant_img_clase = """
                 SELECT c.nombre, COUNT(*) AS cant,
@@ -78,6 +81,16 @@ df_img_clases = dd.sql(cant_img_clase).df()
 print(df_img_clases)
 
 
+#%% Gráfico de barras para ver cantidades de muestras por clase: 
+
+fig, ax = plt.subplots()
+ax.bar(data=df_img_clases, x='nombre', height='cant')
+ax.set_title('Cantidad de muestras por clase', fontsize='large')
+ax.set_xlabel('Clase', fontsize='large')
+ax.set_ylabel('Cantidad de muestras', fontsize='large')
+
+ax.set_xticks(range(len(df_img_clases)))
+ax.set_xticklabels(df_img_clases['nombre'], rotation=90, fontsize=15)
 
 # Plot imagen
 img = np.array(X.iloc[12]).reshape((28,28))
@@ -388,21 +401,20 @@ k = 5
 #La mayoría de los pixeles que tienen mayor diferencia se encuentran entre los mas brillantes de la clase 2
 #por lo que tambien deben ser de los menos brillantes en la clase 9. 
 
-subconjuntos = [["pixel45", "pixel46", "pixel47"], ["pixel338", "pixel310", "pixel366"], 
+subconjuntos_3 = [["pixel45", "pixel46", "pixel47"], ["pixel338", "pixel310", "pixel366"], 
                 ["pixel47", "pixel48", "pixel49"], ["pixel46", "pixel338", "pixel48"]]
+
 resultados_3 = []
 
-for cols in subconjuntos:
+for cols in subconjuntos_3:
     knn = KNeighborsClassifier(n_neighbors= k)
     knn.fit(X_train[cols], Y_train)
     Y_pred = knn.predict(X_test[cols])
     acc = accuracy_score(Y_test, Y_pred)
-    precision = precision_score(Y_test, Y_pred, pos_label=9)
-    recall = recall_score(Y_test, Y_pred, pos_label=9)
+ 
     
-    print(f"atributos={cols}: exactitud={acc:.3f}, precision={precision:.3f}, recall={recall:.3f}")
-    resultados_3.append({'atributos': str(cols), 'accuracy': acc,
-                       'precision': precision, 'recall': recall})
+    print(f"atributos={cols}: exactitud={acc:.3f}")
+    resultados_3.append({'atributos': str(cols), 'accuracy': acc})
 
 tabla_resultados_3 = pd.DataFrame(resultados_3)
 print(tabla_resultados_3)
@@ -413,23 +425,21 @@ print(tabla_resultados_3)
 
 k = 5
 
-subconjuntos = [["pixel45", "pixel46", "pixel47", "pixel44", "pixel48", "pixel43"], 
+subconjuntos_5 = [["pixel45", "pixel46", "pixel47", "pixel44", "pixel48", "pixel43"], 
                 ["pixel338", "pixel310", "pixel366", "pixel283", "pixel394", "pixel365"], 
                 ["pixel47", "pixel48", "pixel49", "pixel46", "pixel50", "pixel45"], 
                 ["pixel46","pixel45" ,"pixel338", "pixel310", "pixel48", "pixel47"]]
 resultados_6 = []
 
-for cols in subconjuntos:
+for cols in subconjuntos_5:
     knn = KNeighborsClassifier(n_neighbors= k)
     knn .fit(X_train[cols], Y_train)
     Y_pred = knn.predict(X_test[cols])
     acc = accuracy_score(Y_test, Y_pred)
-    precision = precision_score(Y_test, Y_pred, pos_label=9)
-    recall = recall_score(Y_test, Y_pred, pos_label=9)
+
     
-    print(f"atributos={cols}: exactitud={acc:.3f}, precision={precision:.3f}, recall={recall:.3f}")
-    resultados_6.append({'atributos': str(cols), 'accuracy': acc,
-                       'precision': precision, 'recall': recall})
+    print(f"atributos={cols}: exactitud={acc:.3f}")
+    resultados_6.append({'atributos': str(cols), 'accuracy': acc})
 
 tabla_resultados_6 = pd.DataFrame(resultados_6)
 print(tabla_resultados_6)
@@ -438,23 +448,21 @@ print(tabla_resultados_6)
 
 k = 5
 
-subconjuntos = [["pixel40", "pixel41", "pixel42", "pixel49", "pixel45", "pixel46", "pixel47", "pixel44", "pixel48", "pixel43"], 
+subconjuntos_10 = [["pixel40", "pixel41", "pixel42", "pixel49", "pixel45", "pixel46", "pixel47", "pixel44", "pixel48", "pixel43"], 
                 ["pixel225", "pixel282", "pixel311", "pixel283", "pixel365", "pixel393", "pixel394", "pixel366", "pixel310", "pixel338"], 
                 ["pixel51", "pixel113", "pixel169", "pixel141", "pixel45", "pixel50", "pixel46", "pixel49", "pixel47", "pixel48"], 
                 ["pixel46","pixel49", "pixel48" ,"pixel338", "pixel310", "pixel47", "pixel40", "pixel282", "pixel311", "pixel283"]]
 resultados_10 = []
 
-for cols in subconjuntos:
+for cols in subconjuntos_10:
     knn = KNeighborsClassifier(n_neighbors= k)
     knn.fit(X_train[cols], Y_train)
     Y_pred = knn.predict(X_test[cols])
     acc = accuracy_score(Y_test, Y_pred)
-    precision = precision_score(Y_test, Y_pred, pos_label=9)
-    recall = recall_score(Y_test, Y_pred, pos_label=9)
+
     
-    print(f"atributos={cols}: exactitud={acc:.3f}, precision={precision:.3f}, recall={recall:.3f}")
-    resultados_10.append({'atributos': str(cols), 'accuracy': acc,
-                       'precision': precision, 'recall': recall})
+    print(f"atributos={cols}: exactitud={acc:.3f}")
+    resultados_10.append({'atributos': str(cols), 'accuracy': acc})
 
 tabla_resultados_10 = pd.DataFrame(resultados_10)
 print(tabla_resultados_10)
@@ -462,27 +470,158 @@ print(tabla_resultados_10)
 
 
 
-resultados_dif_k = []
+#%% NOS QUEDAMOS CON 10 ATRIBUTOS Y PROBAMOS LAS DIFERENTES COMBINACIONES EN DIFERENTES K 
+#El accuracy dio mas alto de todos cuando usamos los subconjuntos de 10 atributos asi que vamos a quedarnos con ese 
+# y ver que combinación de atributos y k es la que maximiza la métrica. 
 
-#Cantidad diferente de atributos pero con distintas combinaciones?
+nombres = ['Brillantes Cuadrado', 'Brillantes Casa', 'Diferencias', 'Mezcla']
+
+resultados_dif_k = []  
+
 for k in [3,5,10,15,30]:
-    for cols in subconjuntos: #(este es el ult de cant 10): 
-        knn = KNeighborsClassifier(n_neighbors= k)
+    for nombre, cols in zip(nombres, subconjuntos_10):
+        knn = KNeighborsClassifier(n_neighbors=k)
         knn.fit(X_train[cols], Y_train)
         Y_pred = knn.predict(X_test[cols])
+        acc_train = accuracy_score(Y_train, knn.predict(X_train[cols]))
         acc = accuracy_score(Y_test, Y_pred)
-        precision = precision_score(Y_test, Y_pred, pos_label=9)
-        recall = recall_score(Y_test, Y_pred, pos_label=9)
-        resultados_dif_k.append({'K': k , 'atributos': str(cols), 'accuracy': acc,
-                           'precision': precision, 'recall': recall})
-        
+        resultados_dif_k.append({'K': k, 'nombre': nombre, 'atributos': str(cols),
+                                 'acc_train': acc_train, 'accuracy': acc})
+
 tabla_resultados_dif_k = pd.DataFrame(resultados_dif_k)
 print(tabla_resultados_dif_k) 
 
+# Observamos que siempre la mejor acc por k es la que corresponde al grupo de atributos de la diferencia de las intensidades 
+# pero que no mejora linealmente con el aumento de K. En k = 5 tenemos 0.916, lo cual mejora en k = 10 con 0.926 
+# pero ya en k = 15 baja levemente en 0.922. 
+
+# Por lo que la mejor combinación resultante fue de hacer 10 vecinos con 10 atributios, los cuales corresponden a los 10 
+# pixeles de major diferencia de brillo entre las clases. 
+
+#%% Curva métrica del Acc para diferentes K:
+
+sub = tabla_resultados_dif_k[tabla_resultados_dif_k['nombre'] == 'Diferencias']
+
+plt.plot(sub['K'], sub['acc_train'], label='Train', marker='o')
+plt.plot(sub['K'], sub['accuracy'], label='Test', marker='o')
+plt.xlabel('Variación de K vecinos'); plt.ylabel('Accuracy')
+plt.legend(); plt.show()
+
+
+# K mas chico tenes overfitting y el modelo se ajusta casi perfectamente a  cada punto de entrenamiento 
+# Un poco antes de K 10 la linea de testeo supera a la del entrenamiemto y en K = 10 consigue su mejor resultado 
+
+#%% gráficos de lineas para ver variación de ACC según K para las diferentes combinaciones de 10 atributos 
+
+fig, ax = plt.subplots()
+
+ax.plot('K', 'accuracy', data=tabla_resultados_dif_k[tabla_resultados_dif_k['nombre'] == 'Brillantes Cuadrado'],
+        label='Brillantes Cuadrado', marker='o')
+
+ax.plot('K', 'accuracy', data=tabla_resultados_dif_k[tabla_resultados_dif_k['nombre'] == 'Brillantes Casa'],
+        label='Brillantes Casa', marker='o')
+
+ax.plot('K', 'accuracy', data=tabla_resultados_dif_k[tabla_resultados_dif_k['nombre'] == 'Diferencias'],
+        label='Diferencias', marker='o')
+
+ax.plot('K', 'accuracy', data=tabla_resultados_dif_k[tabla_resultados_dif_k['nombre'] == 'Mezcla'],
+        label='Mezcla', marker='o')
+
+ax.set_title('Variación del ACC según K para diferentes combinaciones de atributos')
+
+ax.set_xlabel('K')
+ax.set_ylabel('Accuracy')
+ax.set_ylim(0.8, 1)
+ax.legend()
+
+#%% # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+ # #                                                                     # #
+# #   CLASIFICACIÓN MULTICLASE                                           # #
+ # #                                                                     # # 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+#%% Separación entre desarrollo y control
+X = imagenes.drop(columns="label")
+Y = imagenes["label"]
+
+X_dev , X_held_out, Y_dev, Y_held_out = train_test_split(
+    X, Y, test_size=0.2, random_state=42, stratify=Y
+)
+
+#%% Métricas de evaluación
+# Vamos a usar accuracy también ya que vimos en el análisis exploratorio que el conjunto total estaba balanceado 
+# y porque al igual que en la parte anterior no hay criterio para priorizar recall o precision por ejemplo 
+# también vamos a utilizar la matriz de confusión 
+
+#%%
+cv = KFold(n_splits=5, shuffle=True, random_state=42)
+
+resultados_arbol = []
+
+for prof in range (1, 11): 
+    for crit in ["gini", "entropy"]:
+        arbol = DecisionTreeClassifier(criterion=crit, max_depth=prof, random_state=42)
+        scores = cross_val_score(arbol, X_dev, Y_dev, cv=cv, scoring = 'accuracy')
+        resultados_arbol.append({"profundidad": prof, "criterio": crit, "acc_media": scores.mean()})
+
+resultados_arbol = pd.DataFrame(resultados_arbol)
+
+#%% Gráfico que compara los criterios por profunidad
+
+
+fig, ax = plt.subplots()
+
+ax.plot('profundidad', 'acc_media', data=resultados_arbol[resultados_arbol['criterio'] == 'gini'],
+        label='Gini', marker='o')
+
+ax.plot('profundidad', 'acc_media', data=resultados_arbol[resultados_arbol['criterio'] == 'entropy'],
+        label='Entropy', marker='o')
 
 
 
+ax.set_title('Variación del ACC según diferentes profundidades del árbol y distintos criterios')
 
+ax.set_xlabel('Profundidad')
+ax.set_ylabel('Accuracy')
+ax.set_ylim(0, 1)
+ax.legend()
 
+#El mejor modelo dentro de las 10 profundidades y los dos criterios fue el de profunidad max (10) con entropia
+#Tuvo un desempeño de 0.78 levemente mejor a la misma profundidad pero con gini (0.77)
 
+#%% Miramos matriz de confusion del mejor modelo 
+mejor_arbol = DecisionTreeClassifier(criterion='entropy', max_depth= 10, random_state= 42)
+y_pred_cv = cross_val_predict(mejor_arbol, X_dev, Y_dev, cv=cv)
+matriz_conf = confusion_matrix(Y_dev, y_pred_cv, normalize = "true") 
 
+print(matriz_conf)
+
+#%% Hago un heatmap con la matriz de confusion
+nombres = ["círculo", "escalera", "cuadrado", "pez", "triángulo",
+           "colectivo", "estrella", "paraguas", "remera", "casa"]
+
+plt.figure(figsize=(10, 8))
+sns.heatmap(matriz_conf,
+            annot=True, fmt=".2f",
+            cmap="Blues",                 
+            vmin=0, vmax=1,
+            linewidths=0.5, linecolor="white",
+            xticklabels=nombres, yticklabels=nombres,
+            cbar_kws={"label": "Proporción de la clase real"})
+plt.xlabel("Clase predicha")
+plt.ylabel("Clase real")
+plt.title("Matriz de confusión (normalizada por fila)")
+plt.xticks(rotation=45, ha="right")
+plt.yticks(rotation=0)
+plt.tight_layout()
+plt.show()
+
+#%% Entrenamos el modelo elegido con todo el conjunto de desarrollo
+
+mejor_arbol.fit(X_dev, Y_dev)
+
+#%% Predecir sobre el Held-Out
