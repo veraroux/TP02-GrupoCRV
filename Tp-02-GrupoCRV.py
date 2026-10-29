@@ -3,13 +3,15 @@
 Materia: Laboratorio de datos - FCEyN - UBA
 Comisión A
 Autoras  : Aviles Clara, Cabrera Maria Rosario Y Roux Vera
-Fecha  : 2026-07-10
-Descripción: En el siguiente archivo se encuentran de forma ordenada todas las etapas del Trabajo Práctico N1 de la materia. 
-             El mismo está divido por secciones, comenzando con las consultas que realizamos para inspeccionar las tablas originales
-             y terminando con la creación de los gráficos pedidos en la consigna. 
-             Al correr este archivo se van a generar todas las tablas pedidas, tanto las que corresponden a nuestras Tablas Modelo
-             como las que se condicen con las consultas SQL pedidas. También se van a generar todos los gráficos que utilizamos a lo largo 
-             de todo nuestro análisis, los cuales se pueden encontrar en la carpeta denominada de la misma forma. 
+Fecha  : 2026-01-11
+Descripción: En el siguiente archivo se encuentran de forma ordenada todas las etapas del Trabajo Práctico N2 de la materia. 
+             El mismo está divido por secciones, comenzando con el análisis exploratorio del data set de Quick, Draw!. Luego se encuentran las secciones 
+             que corresponden a los dos modelos entrenados, con las diferentes combinaciones de parámetros e hiperparametros de los modelos para 
+             conseguir el conjunto que maximiza nuestra métrica de elección. 
+             Al correr este archivo se van a generar todos los gráficos que realizamos para complementar nuestro análisis 
+             junto con los data frames que contienen la información sobre los diferentes criterios que utilizamos para decidir sobre los atributos relevantes, 
+             por ejemplo el que contiene los pixeles mas brillantes o con las intensidades de mayor diferencia.
+             Todo el documento se encuentra documentado y en orden que acompaña a nuestro informe. 
 """
 
 
@@ -42,6 +44,54 @@ evaluacion = pd.read_csv(os.path.join(base, "evaluacion.csv"), sep=',')
 
 X = imagenes.drop(columns = ['label'])
 Y = imagenes ['label']
+
+#%% # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+ # #                                                                     # #
+# #    FUNCIONES PROPIAS                                                 # #
+ # #                                                                     # # 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+def generar_subconjunto(n, dfp, dfd):
+    # nombres de los atributos ordenados de mayor a menor puntaje
+    # (sort_values manda los NaN al final, así que no te molestan)
+    cuadrado = dfp["Clase cuadrado"].sort_values(ascending=False).index.tolist()
+    casa = dfp["Clase casa"].sort_values(ascending=False).index.tolist()
+    dif = dfd["Clase cuadrado - Clase casa"].sort_values(ascending=False).index.tolist()
+
+    sub_cuadrado = cuadrado[:n]
+    sub_casa = casa[:n]
+    sub_dif = dif[:n]
+
+    # mezcla: n//3 de cada lista, sin repetir
+    k = n // 3
+    sub_mezcla = []
+
+    def agregar_sin_repetir(lista, desde, cantidad):
+        i = desde
+        agregados = 0
+        while agregados < cantidad:
+            if lista[i] not in sub_mezcla:
+                sub_mezcla.append(lista[i])
+                agregados += 1
+            i += 1
+
+    agregar_sin_repetir(cuadrado, 0, k)
+    agregar_sin_repetir(casa, 0, k)
+    agregar_sin_repetir(dif, 0, k)
+
+    return [sub_cuadrado, sub_casa, sub_dif, sub_mezcla]
+    
+    
+        
+
+
+
+
+
 
 #%% # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
@@ -91,23 +141,6 @@ ax.set_ylabel('Cantidad de muestras', fontsize='large')
 
 ax.set_xticks(range(len(df_img_clases)))
 ax.set_xticklabels(df_img_clases['nombre'], rotation=90, fontsize=15)
-
-# Plot imagen
-img = np.array(X.iloc[12]).reshape((28,28))
-plt.imshow(img, cmap='gray')
-plt.show()
-
-img = np.array(X.iloc[2]).reshape((28,28))
-plt.imshow(img, cmap='gray')
-plt.show()
-
-
-img = np.array(X.iloc[56]).reshape((28,28))
-plt.imshow(img, cmap='gray')
-plt.show()
-
-img = np.array(X.iloc[105]).reshape((28,28))
-plt.imshow(img, cmap='gray')
 plt.show()
 
 
@@ -118,35 +151,34 @@ plt.show()
 fig, axes = plt.subplots(2, 5, figsize = (20, 10))
 for c, ax in zip(range(10), axes.ravel()): 
     media = X[Y == c].mean().values.reshape(28,28)
-    ax.imshow(media, cmap='gray')
+    ax.imshow(media, cmap='viridis')
     ax.set_title(f'Clase {c}', fontsize = 20)
     ax.tick_params(axis='both', labelsize=16)
 
 plt.show()
 
 
-#%% pixeles menos intesos: 
+#%% pixeles menos intensos: 
 
 dic_valores = {}
 for c in range (10): 
-    dic_valores[f'Clase {c}'] = X[Y== c].mean().sort_values().head(10)
+    dic_valores[f'Clase {c}'] = X[Y== c].mean().sort_values().head(300)
 
-pixeles_menos_intesos = pd.DataFrame(dic_valores)
+pixeles_menos_intensos = pd.DataFrame(dic_valores)
 
-print(pixeles_menos_intesos)
+print(pixeles_menos_intensos)
 
-#%% pixeles mas intesos: 
+#%% pixeles mas intensos: 
 
 dic_valores = {}
 for c in range (10): 
-    dic_valores[f'Clase {clases.loc[c, "nombre"]}'] = X[Y== c].mean().sort_values(ascending = False).head(10)
+    dic_valores[f'Clase {clases.loc[c, "nombre"]}'] = X[Y== c].mean().sort_values(ascending = False).head(300)
 
-pixeles_mas_intesos = pd.DataFrame(dic_valores)
+pixeles_mas_intensos = pd.DataFrame(dic_valores)
 
-print(pixeles_mas_intesos)
+print(pixeles_mas_intensos)
 
-#%% Pixeles entre clases similares ver intensidades que diferencien: 
-    
+#%% Pixeles entre clases similares ver intensidades que diferencien:     
 
 #%% Diferencias entre 0(circulo) y 7 (paraguas)
 
@@ -155,7 +187,7 @@ print(dif_0_7)
 
 
 img = np.array(dif_0_7).reshape((28,28))
-plt.imshow(img, cmap='gray')
+plt.imshow(img, cmap='viridis')
 plt.show()
 
 """
@@ -173,7 +205,7 @@ dif_0_2 = (X[Y == 0].mean() - X[Y == 2].mean()).abs()
 print(dif_0_2)
 
 img = np.array(dif_0_2).reshape((28,28))
-plt.imshow(img, cmap='gray')
+plt.imshow(img, cmap='viridis')
 plt.show()
 
 """
@@ -190,7 +222,7 @@ dif_0_4 = (X[Y == 0].mean() - X[Y == 4].mean()).abs()
 print(dif_0_4)
 
 img = np.array(dif_0_4).reshape((28,28))
-plt.imshow(img, cmap='gray')
+plt.imshow(img, cmap='viridis')
 plt.show()
 
 """
@@ -208,7 +240,7 @@ dif_6_4 = (X[Y == 6].mean() - X[Y == 4].mean()).abs()
 print(dif_6_4)
 
 img = np.array(dif_6_4).reshape((28,28))
-plt.imshow(img, cmap='gray')
+plt.imshow(img, cmap='viridis')
 plt.show()
 
 """
@@ -226,7 +258,7 @@ dif_9_4 = (X[Y == 9].mean() - X[Y == 4].mean()).abs()
 print(dif_9_4)
 
 img = np.array(dif_9_4).reshape((28,28))
-plt.imshow(img, cmap='gray')
+plt.imshow(img, cmap='viridis')
 plt.show()
 
 """
@@ -243,7 +275,7 @@ dif_2_5 = (X[Y == 2].mean() - X[Y == 5].mean()).abs()
 print(dif_2_5)
 
 img = np.array(dif_2_5).reshape((28,28))
-plt.imshow(img, cmap='gray')
+plt.imshow(img, cmap='viridis')
 plt.show()
 
 """
@@ -261,7 +293,7 @@ dif_2_9 = (X[Y == 2].mean() - X[Y == 9].mean()).abs()
 print(dif_2_9)
 
 img = np.array(dif_2_9).reshape((28,28))
-plt.imshow(img, cmap='gray')
+plt.imshow(img, cmap='viridis')
 plt.show()
 
 """
@@ -278,7 +310,7 @@ dif_5_9 = (X[Y == 5].mean() - X[Y == 9].mean()).abs()
 print(dif_5_9)
 
 img = np.array(dif_5_9).reshape((28,28))
-plt.imshow(img, cmap='gray')
+plt.imshow(img, cmap='viridis')
 plt.show()
 
 """
@@ -293,7 +325,7 @@ dif_7_8 = (X[Y == 7].mean() - X[Y == 8].mean()).abs()
 print(dif_7_8)
 
 img = np.array(dif_7_8).reshape((28,28))
-plt.imshow(img, cmap='gray')
+plt.imshow(img, cmap='viridis')
 plt.show()
 
 """
@@ -310,7 +342,7 @@ dif_3_8 = (X[Y == 3].mean() - X[Y == 8].mean()).abs()
 print(dif_3_8)
 
 img = np.array(dif_3_8).reshape((28,28))
-plt.imshow(img, cmap='gray')
+plt.imshow(img, cmap='viridis')
 plt.show()
 
 """
@@ -325,23 +357,23 @@ dif_5_3 = (X[Y == 5].mean() - X[Y == 3].mean()).abs()
 print(dif_5_3)
 
 img = np.array(dif_5_3).reshape((28,28))
-plt.imshow(img, cmap='gray')
+plt.imshow(img, cmap='viridis')
 plt.show()
 
 """
 ANALISIS: 
 """
-#%%
+#%% Tabla pixeles de diferencias mas intensas entre clases
 
 dic_diferencias = {}
 for c in range (10): 
     for i in range(c+1, 10): 
         
-        dic_diferencias[f'Clase {clases.loc[c, "nombre"]} - Clase {clases.loc[i, "nombre"]}'] =  (X[Y == c].mean() - X[Y == i].mean()).abs().nlargest(10)
+        dic_diferencias[f'Clase {clases.loc[c, "nombre"]} - Clase {clases.loc[i, "nombre"]}'] =  (X[Y == c].mean() - X[Y == i].mean()).abs().nlargest(300)
 
-diferencias_mas_intesas = pd.DataFrame(dic_diferencias)
+diferencias_mas_intensas = pd.DataFrame(dic_diferencias)
 
-print(diferencias_mas_intesas)
+print(diferencias_mas_intensas)
 
 
 
@@ -414,8 +446,10 @@ k = 5
 #La mayoría de los pixeles que tienen mayor diferencia se encuentran entre los mas brillantes de la clase 2
 #por lo que tambien deben ser de los menos brillantes en la clase 9. 
 
-subconjuntos_3 = [["pixel45", "pixel46", "pixel47"], ["pixel338", "pixel310", "pixel366"], 
-                ["pixel47", "pixel48", "pixel49"], ["pixel46", "pixel338", "pixel48"]]
+dfp = pixeles_mas_intensos
+dfd = diferencias_mas_intensas
+
+subconjuntos_3 = generar_subconjunto(3, dfp, dfd)
 
 resultados_3 = []
 
@@ -491,7 +525,7 @@ nombres = ['Brillantes Cuadrado', 'Brillantes Casa', 'Diferencias', 'Mezcla']
 
 resultados_dif_k = []  
 
-for k in [3,5,10,15,30]:
+for k in range(1, 200, 5):
     for nombre, cols in zip(nombres, subconjuntos_10):
         knn = KNeighborsClassifier(n_neighbors=k)
         knn.fit(X_train[cols], Y_train)
@@ -575,7 +609,7 @@ cv = KFold(n_splits=5, shuffle=True, random_state=42)
 
 resultados_arbol = []
 
-for prof in range (1, 11): 
+for prof in range (1, 16): 
     for crit in ["gini", "entropy"]:
         arbol = DecisionTreeClassifier(criterion=crit, max_depth=prof, random_state=42)
         scores = cross_val_score(arbol, X_dev, Y_dev, cv=cv, scoring = 'accuracy')
