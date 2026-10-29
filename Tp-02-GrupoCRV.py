@@ -115,11 +115,13 @@ plt.show()
 
 #%%Imágen promedio por clase 
 
-fig, axes = plt.subplots(2, 5)
+fig, axes = plt.subplots(2, 5, figsize = (20, 10))
 for c, ax in zip(range(10), axes.ravel()): 
     media = X[Y == c].mean().values.reshape(28,28)
     ax.imshow(media, cmap='gray')
-    ax.set_title(f'Clase {c}')
+    ax.set_title(f'Clase {c}', fontsize = 20)
+    ax.tick_params(axis='both', labelsize=16)
+
 plt.show()
 
 
@@ -317,7 +319,18 @@ que oscurece la zona. La diferencia aparece en la parte media e inferior: la
 remera conserva los laterales del cuerpo, y el pez es más ancho y difuso en 
 el centro.
 """
+#%% Diferencias entre 5 (colectivo) y 3 (pez)
 
+dif_5_3 = (X[Y == 5].mean() - X[Y == 3].mean()).abs()
+print(dif_5_3)
+
+img = np.array(dif_5_3).reshape((28,28))
+plt.imshow(img, cmap='gray')
+plt.show()
+
+"""
+ANALISIS: 
+"""
 #%%
 
 dic_diferencias = {}
