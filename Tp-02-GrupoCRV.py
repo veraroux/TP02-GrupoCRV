@@ -549,6 +549,7 @@ fig, ax = plt.subplots()
 plt.plot(sub['K'], sub['acc_train'], label='Train', marker='o')
 plt.plot(sub['K'], sub['accuracy'], label='Test', marker='o')
 plt.xlabel('Variación de K vecinos'); plt.ylabel('Accuracy')
+plt.set_title('Variación del ACC según K por Train y Test para el subconjunto "Diferencias"')
 plt.legend(); plt.show()
 
 
@@ -667,9 +668,9 @@ sns.heatmap(matriz_conf,
             linewidths=0.5, linecolor="white",
             xticklabels=nombres, yticklabels=nombres,
             cbar_kws={"label": "Proporción de la clase real"})
-plt.xlabel("Clase predicha")
-plt.ylabel("Clase real")
-plt.title("Matriz de confusión (normalizada por fila)")
+plt.xlabel("Clase predicha", fontsize = 15)
+plt.ylabel("Clase real", fontsize = 15)
+plt.title("Matriz de confusión (normalizada por fila)", fontsize = 20)
 plt.xticks(rotation=45, ha="right")
 plt.yticks(rotation=0)
 plt.tight_layout()
