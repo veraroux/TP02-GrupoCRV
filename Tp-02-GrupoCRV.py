@@ -436,103 +436,99 @@ X_train, X_test, Y_train, Y_test = train_test_split(
 #%% =============================================================================
 # Ajustar el KNN con diferentes cantidades de atributos   
 # ===============================================================================
- 
-#%% UN K FIJO, CONJUNTOS DE 3 ATRIBUTOS     
-k = 5
+#%%
+dfp = pixeles_mas_intensos
+dfd = diferencias_mas_intensas
+k = 5   
+    
+nombres = ["Brillantes Cuadrado", "Brillantes Casa", "Diferencias", "Mezcla"]
+tablas = {}
 
-# Pixeles mas brillantes de la clase 2: del 40 al 49
-# Pixeles mas brillantes de la clase 9: 225, 282, 311, 283, 365, 393, 394, 283, 366, 310, 338
-#Pixeles de mayor diferencia de intensidad entre las clases: 51, 113, 169, 141,45, 50, 46, 49, 47, 48
-#La mayoría de los pixeles que tienen mayor diferencia se encuentran entre los mas brillantes de la clase 2
-#por lo que tambien deben ser de los menos brillantes en la clase 9. 
+for n in range(3, 360, 9):
+    subconjuntos_n = generar_subconjunto(n, dfp, dfd)
+    resultados_n = []
+
+    for nombre, cols in zip(nombres, subconjuntos_n):
+        knn = KNeighborsClassifier(n_neighbors=k)
+        knn.fit(X_train[cols], Y_train)
+        Y_pred = knn.predict(X_test[cols])
+        acc = accuracy_score(Y_test, Y_pred)
+        resultados_n.append({'n': n, 'subconjunto': nombre, 'accuracy': acc})
+
+    tablas[n] = pd.DataFrame(resultados_n)
+
+# una sola tabla con todo
+tabla_subconjuntos = pd.concat(tablas.values(), ignore_index=True) 
+
+
+# Armamos un gráfico para ver accuracy por tamaño de subconjuntos
+
+# GRÁFICO COMPLETO (Y de 0.68 a 1)
+fig, ax = plt.subplots()
+
+ax.plot('n', 'accuracy', data=tabla_subconjuntos[tabla_subconjuntos['subconjunto'] == 'Brillantes Cuadrado'],
+        label='Brillantes Cuadrado', marker='o')
+
+ax.plot('n', 'accuracy', data=tabla_subconjuntos[tabla_subconjuntos['subconjunto'] == 'Brillantes Casa'],
+        label='Brillantes Casa', marker='o')
+
+ax.plot('n', 'accuracy', data=tabla_subconjuntos[tabla_subconjuntos['subconjunto'] == 'Diferencias'],
+        label='Diferencias', marker='o')
+
+ax.plot('n', 'accuracy', data=tabla_subconjuntos[tabla_subconjuntos['subconjunto'] == 'Mezcla'],
+        label='Mezcla', marker='o')
+
+ax.set_title('Variación del ACC según cantidad de atributos para los distintos subconjuntos, K=5')
+
+ax.set_xlabel('Cantidad de atributos')
+ax.set_ylabel('Accuracy')
+ax.set_ylim(0.68, 1)
+ax.legend()
+
+# GRÁFICO ZOOMEADO (Y de 0.88 a 1)
+fig, ax = plt.subplots()
+
+ax.plot('n', 'accuracy', data=tabla_subconjuntos[tabla_subconjuntos['subconjunto'] == 'Brillantes Cuadrado'],
+        label='Brillantes Cuadrado', marker='o')
+
+ax.plot('n', 'accuracy', data=tabla_subconjuntos[tabla_subconjuntos['subconjunto'] == 'Brillantes Casa'],
+        label='Brillantes Casa', marker='o')
+
+ax.plot('n', 'accuracy', data=tabla_subconjuntos[tabla_subconjuntos['subconjunto'] == 'Diferencias'],
+        label='Diferencias', marker='o')
+
+ax.plot('n', 'accuracy', data=tabla_subconjuntos[tabla_subconjuntos['subconjunto'] == 'Mezcla'],
+        label='Mezcla', marker='o')
+
+ax.set_title('Variación del ACC según cantidad de atributos para los distintos subconjuntos, K=5')
+
+ax.set_xlabel('Cantidad de atributos')
+ax.set_ylabel('Accuracy')
+ax.set_ylim(0.88, 1)
+ax.legend()
+
+#%% NOS QUEDAMOS CON 255 ATRIBUTOS Y PROBAMOS LAS DIFERENTES COMBINACIONES EN DIFERENTES K 
+#El accuracy dio mas alto de todos cuando usamos los subconjuntos de 255 atributos asi que vamos a quedarnos con ese 
+# y ver que combinación de atributos y k es la que maximiza la métrica. 
 
 dfp = pixeles_mas_intensos
 dfd = diferencias_mas_intensas
-
-subconjuntos_3 = generar_subconjunto(3, dfp, dfd)
-
-resultados_3 = []
-
-for cols in subconjuntos_3:
-    knn = KNeighborsClassifier(n_neighbors= k)
-    knn.fit(X_train[cols], Y_train)
-    Y_pred = knn.predict(X_test[cols])
-    acc = accuracy_score(Y_test, Y_pred)
- 
-    
-    print(f"atributos={cols}: exactitud={acc:.3f}")
-    resultados_3.append({'atributos': str(cols), 'accuracy': acc})
-
-tabla_resultados_3 = pd.DataFrame(resultados_3)
-print(tabla_resultados_3)
-
-
-
-#%% UN K FIJO, CONJUNTOS DE 6 ATRIBUTOS     
-
-k = 5
-
-subconjuntos_5 = [["pixel45", "pixel46", "pixel47", "pixel44", "pixel48", "pixel43"], 
-                ["pixel338", "pixel310", "pixel366", "pixel283", "pixel394", "pixel365"], 
-                ["pixel47", "pixel48", "pixel49", "pixel46", "pixel50", "pixel45"], 
-                ["pixel46","pixel45" ,"pixel338", "pixel310", "pixel48", "pixel47"]]
-resultados_6 = []
-
-for cols in subconjuntos_5:
-    knn = KNeighborsClassifier(n_neighbors= k)
-    knn .fit(X_train[cols], Y_train)
-    Y_pred = knn.predict(X_test[cols])
-    acc = accuracy_score(Y_test, Y_pred)
-
-    
-    print(f"atributos={cols}: exactitud={acc:.3f}")
-    resultados_6.append({'atributos': str(cols), 'accuracy': acc})
-
-tabla_resultados_6 = pd.DataFrame(resultados_6)
-print(tabla_resultados_6)
-
-#%% UN K FIJO, CONJUNTOS DE 10 ATRIBUTOS     
-
-k = 5
-
-subconjuntos_10 = [["pixel40", "pixel41", "pixel42", "pixel49", "pixel45", "pixel46", "pixel47", "pixel44", "pixel48", "pixel43"], 
-                ["pixel225", "pixel282", "pixel311", "pixel283", "pixel365", "pixel393", "pixel394", "pixel366", "pixel310", "pixel338"], 
-                ["pixel51", "pixel113", "pixel169", "pixel141", "pixel45", "pixel50", "pixel46", "pixel49", "pixel47", "pixel48"], 
-                ["pixel46","pixel49", "pixel48" ,"pixel338", "pixel310", "pixel47", "pixel40", "pixel282", "pixel311", "pixel283"]]
-resultados_10 = []
-
-for cols in subconjuntos_10:
-    knn = KNeighborsClassifier(n_neighbors= k)
-    knn.fit(X_train[cols], Y_train)
-    Y_pred = knn.predict(X_test[cols])
-    acc = accuracy_score(Y_test, Y_pred)
-
-    
-    print(f"atributos={cols}: exactitud={acc:.3f}")
-    resultados_10.append({'atributos': str(cols), 'accuracy': acc})
-
-tabla_resultados_10 = pd.DataFrame(resultados_10)
-print(tabla_resultados_10)
-
-
-
-
-#%% NOS QUEDAMOS CON 10 ATRIBUTOS Y PROBAMOS LAS DIFERENTES COMBINACIONES EN DIFERENTES K 
-#El accuracy dio mas alto de todos cuando usamos los subconjuntos de 10 atributos asi que vamos a quedarnos con ese 
-# y ver que combinación de atributos y k es la que maximiza la métrica. 
-
 nombres = ['Brillantes Cuadrado', 'Brillantes Casa', 'Diferencias', 'Mezcla']
+subconjuntos_255 = generar_subconjunto(255, dfp, dfd)
+subconjuntos_9 = generar_subconjunto(9, dfp, dfd)
+
 
 resultados_dif_k = []  
 
-for k in range(1, 200, 5):
-    for nombre, cols in zip(nombres, subconjuntos_10):
+
+for k in range(1, 100, 5):
+    for nombre, cols in zip(nombres, subconjuntos_255):
         knn = KNeighborsClassifier(n_neighbors=k)
         knn.fit(X_train[cols], Y_train)
         Y_pred = knn.predict(X_test[cols])
         acc_train = accuracy_score(Y_train, knn.predict(X_train[cols]))
         acc = accuracy_score(Y_test, Y_pred)
-        resultados_dif_k.append({'K': k, 'nombre': nombre, 'atributos': str(cols),
+        resultados_dif_k.append({'K': k, 'subconjunto': nombre, 'n': str(cols),
                                  'acc_train': acc_train, 'accuracy': acc})
 
 tabla_resultados_dif_k = pd.DataFrame(resultados_dif_k)
@@ -547,7 +543,8 @@ print(tabla_resultados_dif_k)
 
 #%% Curva métrica del Acc para diferentes K:
 
-sub = tabla_resultados_dif_k[tabla_resultados_dif_k['nombre'] == 'Diferencias']
+sub = tabla_resultados_dif_k[tabla_resultados_dif_k['subconjunto'] == 'Diferencias']
+fig, ax = plt.subplots()
 
 plt.plot(sub['K'], sub['acc_train'], label='Train', marker='o')
 plt.plot(sub['K'], sub['accuracy'], label='Test', marker='o')
@@ -562,16 +559,16 @@ plt.legend(); plt.show()
 
 fig, ax = plt.subplots()
 
-ax.plot('K', 'accuracy', data=tabla_resultados_dif_k[tabla_resultados_dif_k['nombre'] == 'Brillantes Cuadrado'],
+ax.plot('K', 'accuracy', data=tabla_resultados_dif_k[tabla_resultados_dif_k['subconjunto'] == 'Brillantes Cuadrado'],
         label='Brillantes Cuadrado', marker='o')
 
-ax.plot('K', 'accuracy', data=tabla_resultados_dif_k[tabla_resultados_dif_k['nombre'] == 'Brillantes Casa'],
+ax.plot('K', 'accuracy', data=tabla_resultados_dif_k[tabla_resultados_dif_k['subconjunto'] == 'Brillantes Casa'],
         label='Brillantes Casa', marker='o')
 
-ax.plot('K', 'accuracy', data=tabla_resultados_dif_k[tabla_resultados_dif_k['nombre'] == 'Diferencias'],
+ax.plot('K', 'accuracy', data=tabla_resultados_dif_k[tabla_resultados_dif_k['subconjunto'] == 'Diferencias'],
         label='Diferencias', marker='o')
 
-ax.plot('K', 'accuracy', data=tabla_resultados_dif_k[tabla_resultados_dif_k['nombre'] == 'Mezcla'],
+ax.plot('K', 'accuracy', data=tabla_resultados_dif_k[tabla_resultados_dif_k['subconjunto'] == 'Mezcla'],
         label='Mezcla', marker='o')
 
 ax.set_title('Variación del ACC según K para diferentes combinaciones de atributos')
@@ -605,42 +602,53 @@ X_dev , X_held_out, Y_dev, Y_held_out = train_test_split(
 # también vamos a utilizar la matriz de confusión 
 
 #%%
+
 cv = KFold(n_splits=5, shuffle=True, random_state=42)
 
 resultados_arbol = []
 
-for prof in range (1, 16): 
+for prof in range(1, 16):
     for crit in ["gini", "entropy"]:
         arbol = DecisionTreeClassifier(criterion=crit, max_depth=prof, random_state=42)
-        scores = cross_val_score(arbol, X_dev, Y_dev, cv=cv, scoring = 'accuracy')
-        resultados_arbol.append({"profundidad": prof, "criterio": crit, "acc_media": scores.mean()})
+        res = cross_validate(arbol, X_dev, Y_dev, cv=cv,
+                             scoring='accuracy', return_train_score=True)
+        resultados_arbol.append({
+            "profundidad": prof,
+            "criterio": crit,
+            "acc_train": res["train_score"].mean(),
+            "acc_val": res["test_score"].mean()
+        })
 
 resultados_arbol = pd.DataFrame(resultados_arbol)
 
 #%% Gráfico que compara los criterios por profunidad
 
-
 fig, ax = plt.subplots()
 
-ax.plot('profundidad', 'acc_media', data=resultados_arbol[resultados_arbol['criterio'] == 'gini'],
+ax.plot('profundidad', 'acc_val', data=resultados_arbol[resultados_arbol['criterio'] == 'gini'],
         label='Gini', marker='o')
 
-ax.plot('profundidad', 'acc_media', data=resultados_arbol[resultados_arbol['criterio'] == 'entropy'],
+ax.plot('profundidad', 'acc_val', data=resultados_arbol[resultados_arbol['criterio'] == 'entropy'],
         label='Entropy', marker='o')
 
+ax.plot('profundidad', 'acc_train', data=resultados_arbol[resultados_arbol['criterio'] == 'gini'],
+        label='Gini train', marker='o')
+
+ax.plot('profundidad', 'acc_train', data=resultados_arbol[resultados_arbol['criterio'] == 'entropy'],
+        label='Entropy train', marker='o')
 
 
-ax.set_title('Variación del ACC según diferentes profundidades del árbol y distintos criterios')
+ax.set_title('Variación del ACC según diferentes profundidades del árbol y distintos criterios por train y test')
 
 ax.set_xlabel('Profundidad')
 ax.set_ylabel('Accuracy')
-ax.set_ylim(0, 1)
+ax.set_ylim(0.16, 1.02)
 ax.legend()
 
 #El mejor modelo dentro de las 10 profundidades y los dos criterios fue el de profunidad max (10) con entropia
 #Tuvo un desempeño de 0.78 levemente mejor a la misma profundidad pero con gini (0.77)
 
-#%% Miramos matriz de confusion del mejor modelo 
+#%% Miramos matriz de confusion del mejor modelo dentro de los params de la consigna 
 mejor_arbol = DecisionTreeClassifier(criterion='entropy', max_depth= 10, random_state= 42)
 y_pred_cv = cross_val_predict(mejor_arbol, X_dev, Y_dev, cv=cv)
 matriz_conf = confusion_matrix(Y_dev, y_pred_cv, normalize = "true") 
@@ -671,4 +679,8 @@ plt.show()
 
 mejor_arbol.fit(X_dev, Y_dev)
 
+
 #%% Predecir sobre el Held-Out
+mejor_arbol_pred = mejor_arbol.predict(X_held_out)
+acc_mejor_arbol = accuracy_score(Y_held_out, mejor_arbol_pred)
+matriz_held = confusion_matrix(Y_held_out, mejor_arbol_pred, normalize="true")
