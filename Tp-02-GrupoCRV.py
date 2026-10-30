@@ -28,7 +28,7 @@ from sklearn.tree import DecisionTreeClassifier, plot_tree
 import seaborn as sns
 
 
-SEMILLA = 42    
+semilla  = 42    
 
 
 try:
@@ -714,3 +714,16 @@ mejor_arbol.fit(X_dev, Y_dev)
 mejor_arbol_pred = mejor_arbol.predict(X_held_out)
 acc_mejor_arbol = accuracy_score(Y_held_out, mejor_arbol_pred)
 matriz_held = confusion_matrix(Y_held_out, mejor_arbol_pred, normalize="true")
+
+
+#%% =============================================================================
+# Predecir las clases de las imágenes del conjunto de evaluación  
+# ===============================================================================
+
+X_catedra = evaluacion.drop(columns="id")
+
+predict_catedra = mejor_arbol.predict(X_catedra)
+
+predicciones = pd.DataFrame({"id" : evaluacion["id"], "label": predict_catedra})
+nombre_archivo = "TP-02-0.7988-GrupoCRV.csv"
+predicciones.to_csv(os.path.join(base, nombre_archivo), index=False) # si se abre con excel las clases 0 no aparecen porque excel interpreta que por ej 2,0 es 2
