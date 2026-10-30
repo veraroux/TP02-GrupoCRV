@@ -162,7 +162,7 @@ plt.show()
 
 dic_valores = {}
 for c in range (10): 
-    dic_valores[f'Clase {c}'] = X[Y== c].mean().sort_values().head(300)
+    dic_valores[f'Clase {c}'] = X[Y== c].mean().sort_values().head(360)
 
 pixeles_menos_intensos = pd.DataFrame(dic_valores)
 
@@ -172,7 +172,7 @@ print(pixeles_menos_intensos)
 
 dic_valores = {}
 for c in range (10): 
-    dic_valores[f'Clase {clases.loc[c, "nombre"]}'] = X[Y== c].mean().sort_values(ascending = False).head(300)
+    dic_valores[f'Clase {clases.loc[c, "nombre"]}'] = X[Y== c].mean().sort_values(ascending = False).head(360)
 
 pixeles_mas_intensos = pd.DataFrame(dic_valores)
 
@@ -369,7 +369,7 @@ dic_diferencias = {}
 for c in range (10): 
     for i in range(c+1, 10): 
         
-        dic_diferencias[f'Clase {clases.loc[c, "nombre"]} - Clase {clases.loc[i, "nombre"]}'] =  (X[Y == c].mean() - X[Y == i].mean()).abs().nlargest(300)
+        dic_diferencias[f'Clase {clases.loc[c, "nombre"]} - Clase {clases.loc[i, "nombre"]}'] =  (X[Y == c].mean() - X[Y == i].mean()).abs().nlargest(360)
 
 diferencias_mas_intensas = pd.DataFrame(dic_diferencias)
 
@@ -426,11 +426,11 @@ print(cant_casa)
 # Separación en Train y Test  
 # ===============================================================================
 
-X = df_clas_binaria.drop(columns="label")
-Y = df_clas_binaria["label"]
+X_bin = df_clas_binaria.drop(columns="label")
+Y_bin = df_clas_binaria["label"]
 
 X_train, X_test, Y_train, Y_test = train_test_split(
-    X, Y, test_size=0.2, random_state=42, stratify=Y
+    X_bin, Y_bin, test_size=0.2, random_state=SEMILLA, stratify=Y_bin
 )
 
 #%% =============================================================================
@@ -441,14 +441,14 @@ dfp = pixeles_mas_intensos
 dfd = diferencias_mas_intensas
 k = 5   
     
-nombres = ["Brillantes Cuadrado", "Brillantes Casa", "Diferencias", "Mezcla"]
+nombres_subconjuntos = ["Brillantes Cuadrado", "Brillantes Casa", "Diferencias", "Mezcla"]
 tablas = {}
 
 for n in range(3, 360, 9):
     subconjuntos_n = generar_subconjunto(n, dfp, dfd)
     resultados_n = []
 
-    for nombre, cols in zip(nombres, subconjuntos_n):
+    for nombre, cols in zip(nombres_subconjuntos, subconjuntos_n):
         knn = KNeighborsClassifier(n_neighbors=k)
         knn.fit(X_train[cols], Y_train)
         Y_pred = knn.predict(X_test[cols])
@@ -513,7 +513,7 @@ ax.legend()
 
 dfp = pixeles_mas_intensos
 dfd = diferencias_mas_intensas
-nombres = ['Brillantes Cuadrado', 'Brillantes Casa', 'Diferencias', 'Mezcla']
+nombres_subconjuntos = ['Brillantes Cuadrado', 'Brillantes Casa', 'Diferencias', 'Mezcla']
 subconjuntos_255 = generar_subconjunto(255, dfp, dfd)
 subconjuntos_9 = generar_subconjunto(9, dfp, dfd)
 
@@ -522,7 +522,7 @@ resultados_dif_k = []
 
 
 for k in range(1, 100, 5):
-    for nombre, cols in zip(nombres, subconjuntos_255):
+    for nombre, cols in zip(nombres_subconjuntos, subconjuntos_255):
         knn = KNeighborsClassifier(n_neighbors=k)
         knn.fit(X_train[cols], Y_train)
         Y_pred = knn.predict(X_test[cols])
@@ -541,6 +541,23 @@ print(tabla_resultados_dif_k)
 # Por lo que la mejor combinación resultante fue de hacer 10 vecinos con 10 atributios, los cuales corresponden a los 10 
 # pixeles de major diferencia de brillo entre las clases. 
 
+#%% para mirar particularmente un subconjunto con menor cantidad de atributos y ver que no mide mejor el K = 1
+resultados_dif_k_9 = []  
+
+
+for k in range(1, 100, 5):
+    for nombre, cols in zip(nombres_subconjuntos, subconjuntos_9):
+        knn = KNeighborsClassifier(n_neighbors=k)
+        knn.fit(X_train[cols], Y_train)
+        Y_pred = knn.predict(X_test[cols])
+        acc_train = accuracy_score(Y_train, knn.predict(X_train[cols]))
+        acc = accuracy_score(Y_test, Y_pred)
+        resultados_dif_k_9.append({'K': k, 'subconjunto': nombre, 'n': str(cols),
+                                 'acc_train': acc_train, 'accuracy': acc})
+
+tabla_resultados_dif_k_9 = pd.DataFrame(resultados_dif_k_9)
+print(tabla_resultados_dif_k_9) 
+
 #%% Curva métrica del Acc para diferentes K:
 
 sub = tabla_resultados_dif_k[tabla_resultados_dif_k['subconjunto'] == 'Diferencias']
@@ -549,12 +566,25 @@ fig, ax = plt.subplots()
 plt.plot(sub['K'], sub['acc_train'], label='Train', marker='o')
 plt.plot(sub['K'], sub['accuracy'], label='Test', marker='o')
 plt.xlabel('Variación de K vecinos'); plt.ylabel('Accuracy')
-plt.set_title('Variación del ACC según K por Train y Test para el subconjunto "Diferencias"')
+plt.title('Variación del ACC según K por Train y Test para el subconjunto "Diferencias"')
 plt.legend(); plt.show()
 
 
 # K mas chico tenes overfitting y el modelo se ajusta casi perfectamente a  cada punto de entrenamiento 
-# Un poco antes de K 10 la linea de testeo supera a la del entrenamiemto y en K = 10 consigue su mejor resultado 
+# Un poco antes de K 10 la linea de testeo supera a la del entrenamiemto y en K = 10 consigue su mejor resultado
+
+
+#%% Curva métrica del Acc para diferentes K en subconjuntos de 9 atributos:
+
+sub_9 = tabla_resultados_dif_k_9[tabla_resultados_dif_k_9['subconjunto'] == 'Diferencias']
+fig, ax = plt.subplots()
+
+plt.plot(sub_9['K'], sub_9['acc_train'], label='Train', marker='o')
+plt.plot(sub_9['K'], sub_9['accuracy'], label='Test', marker='o')
+plt.xlabel('Variación de K vecinos'); plt.ylabel('Accuracy')
+plt.title('Variación del ACC según K por Train y Test para el subconjunto "Diferencias" con 9 atributos')
+plt.legend(); plt.show()
+ 
 
 #%% gráficos de lineas para ver variación de ACC según K para las diferentes combinaciones de 10 atributos 
 
@@ -657,8 +687,7 @@ matriz_conf = confusion_matrix(Y_dev, y_pred_cv, normalize = "true")
 print(matriz_conf)
 
 #%% Hago un heatmap con la matriz de confusion
-nombres = ["círculo", "escalera", "cuadrado", "pez", "triángulo",
-           "colectivo", "estrella", "paraguas", "remera", "casa"]
+nombres_clases = clases["nombre"].tolist()
 
 plt.figure(figsize=(10, 8))
 sns.heatmap(matriz_conf,
@@ -666,10 +695,10 @@ sns.heatmap(matriz_conf,
             cmap="Blues",                 
             vmin=0, vmax=1,
             linewidths=0.5, linecolor="white",
-            xticklabels=nombres, yticklabels=nombres,
+            xticklabels=nombres_clases, yticklabels=nombres_clases,
             cbar_kws={"label": "Proporción de la clase real"})
-plt.xlabel("Clase predicha", fontsize = 15)
-plt.ylabel("Clase real", fontsize = 15)
+plt.xlabel("Clase predicha", fontsize = 20)
+plt.ylabel("Clase real", fontsize = 20)
 plt.title("Matriz de confusión (normalizada por fila)", fontsize = 20)
 plt.xticks(rotation=45, ha="right")
 plt.yticks(rotation=0)
