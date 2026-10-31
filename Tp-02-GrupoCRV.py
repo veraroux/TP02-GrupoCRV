@@ -613,7 +613,8 @@ X_dev , X_held_out, Y_dev, Y_held_out = train_test_split(
 # y porque, al igual que en la parte anterior, no hay criterio para priorizar tanto recall como precision. 
 # También vamos a utilizar la matriz de confusión.
 
-#%% 
+#%% Giny y entropy para el árbol de decisiones (Ampliamos la profundidad pero luego en el análisis
+# usamos, por consigna, hasta profundidad = 10)
 
 cv = KFold(n_splits=5, shuffle=True, random_state=semilla)
 
