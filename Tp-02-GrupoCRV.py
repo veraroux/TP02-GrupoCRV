@@ -54,6 +54,7 @@ Y = imagenes ['label']
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#%%
 
 def generar_subconjunto(n, dfp, dfd):
     # nombres de los atributos ordenados de mayor a menor puntaje
@@ -85,14 +86,6 @@ def generar_subconjunto(n, dfp, dfd):
 
     return [sub_cuadrado, sub_casa, sub_dif, sub_mezcla]
     
-    
-        
-
-
-
-
-
-
 #%% # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -118,7 +111,6 @@ print(imagenes.shape)
 
 #%% Vemos si las clases estan balanceadas:
 
-
 cant_img_clase = """
                 SELECT c.nombre, COUNT(*) AS cant,
                 FROM clases as c 
@@ -129,7 +121,6 @@ cant_img_clase = """
 
 df_img_clases = dd.sql(cant_img_clase).df()
 print(df_img_clases)
-
 
 #%% Gráfico de barras para ver cantidades de muestras por clase: 
 
@@ -143,10 +134,9 @@ ax.set_xticks(range(len(df_img_clases)))
 ax.set_xticklabels(df_img_clases['nombre'], rotation=90, fontsize=15)
 plt.show()
 
+#%% Por Clase, pixeles promedio de mayor intensidad: 
 
-#%% Por Clase, pixeles promeido de mayor intesidad: 
-
-#%%Imágen promedio por clase 
+#%%Imagen promedio por clase 
 
 fig, axes = plt.subplots(2, 5, figsize = (20, 10))
 for c, ax in zip(range(10), axes.ravel()): 
@@ -156,7 +146,6 @@ for c, ax in zip(range(10), axes.ravel()):
     ax.tick_params(axis='both', labelsize=16)
 
 plt.show()
-
 
 #%% pixeles menos intensos: 
 
@@ -360,9 +349,6 @@ img = np.array(dif_5_3).reshape((28,28))
 plt.imshow(img, cmap='viridis')
 plt.show()
 
-"""
-ANALISIS: 
-"""
 #%% Tabla pixeles de diferencias mas intensas entre clases
 
 dic_diferencias = {}
@@ -374,8 +360,6 @@ for c in range (10):
 diferencias_mas_intensas = pd.DataFrame(dic_diferencias)
 
 print(diferencias_mas_intensas)
-
-
 
 #%% # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
@@ -390,6 +374,7 @@ print(diferencias_mas_intensas)
 #%% =============================================================================
 # Armado del DataFrame 
 # ===============================================================================
+#%% Dataframe con clases 2 y 9
 consulta_df_binario = """
                       SELECT *
                       FROM imagenes 
@@ -425,18 +410,21 @@ print(cant_casa)
 #%% =============================================================================
 # Separación en Train y Test  
 # ===============================================================================
+#%% 
 
 X_bin = df_clas_binaria.drop(columns="label")
 Y_bin = df_clas_binaria["label"]
 
 X_train, X_test, Y_train, Y_test = train_test_split(
-    X_bin, Y_bin, test_size=0.2, random_state=SEMILLA, stratify=Y_bin
+    X_bin, Y_bin, test_size=0.2, random_state=semilla, stratify=Y_bin
 )
 
 #%% =============================================================================
 # Ajustar el KNN con diferentes cantidades de atributos   
 # ===============================================================================
-#%%
+#%% Creamos la función generar_subconjuntos para automatizar el proceso de análisis y elección
+# de tamaños de subconjuntos (función al inicio del archivo)
+
 dfp = pixeles_mas_intensos
 dfd = diferencias_mas_intensas
 k = 5   
@@ -460,8 +448,7 @@ for n in range(3, 360, 9):
 # una sola tabla con todo
 tabla_subconjuntos = pd.concat(tablas.values(), ignore_index=True) 
 
-
-# Armamos un gráfico para ver accuracy por tamaño de subconjuntos
+#%% Armamos un gráfico para ver accuracy por tamaño de subconjuntos
 
 # GRÁFICO COMPLETO (Y de 0.68 a 1)
 fig, ax = plt.subplots()
@@ -508,8 +495,8 @@ ax.set_ylim(0.88, 1)
 ax.legend()
 
 #%% NOS QUEDAMOS CON 255 ATRIBUTOS Y PROBAMOS LAS DIFERENTES COMBINACIONES EN DIFERENTES K 
-#El accuracy dio mas alto de todos cuando usamos los subconjuntos de 255 atributos asi que vamos a quedarnos con ese 
-# y ver que combinación de atributos y k es la que maximiza la métrica. 
+# El accuracy dio mas alto de todos cuando usamos los subconjuntos de 255 atributos por lo 
+# que nos quedamos con este, y vemos las combinaciones de atributos y k que maximizen la métrica. 
 
 dfp = pixeles_mas_intensos
 dfd = diferencias_mas_intensas
@@ -534,14 +521,7 @@ for k in range(1, 100, 5):
 tabla_resultados_dif_k = pd.DataFrame(resultados_dif_k)
 print(tabla_resultados_dif_k) 
 
-# Observamos que siempre la mejor acc por k es la que corresponde al grupo de atributos de la diferencia de las intensidades 
-# pero que no mejora linealmente con el aumento de K. En k = 5 tenemos 0.916, lo cual mejora en k = 10 con 0.926 
-# pero ya en k = 15 baja levemente en 0.922. 
-
-# Por lo que la mejor combinación resultante fue de hacer 10 vecinos con 10 atributios, los cuales corresponden a los 10 
-# pixeles de major diferencia de brillo entre las clases. 
-
-#%% para mirar particularmente un subconjunto con menor cantidad de atributos y ver que no mide mejor el K = 1
+#%% Para mirar particularmente un subconjunto con menor cantidad de atributos y ver que no mide mejor el K = 1
 resultados_dif_k_9 = []  
 
 
@@ -586,7 +566,7 @@ plt.title('Variación del ACC según K por Train y Test para el subconjunto "Dif
 plt.legend(); plt.show()
  
 
-#%% gráficos de lineas para ver variación de ACC según K para las diferentes combinaciones de 10 atributos 
+#%% Gráficos de lineas para ver variación de ACC según K para las diferentes combinaciones de 255 atributos 
 
 fig, ax = plt.subplots()
 
@@ -620,27 +600,28 @@ ax.legend()
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 #%% Separación entre desarrollo y control
+
 X = imagenes.drop(columns="label")
 Y = imagenes["label"]
 
 X_dev , X_held_out, Y_dev, Y_held_out = train_test_split(
-    X, Y, test_size=0.2, random_state=42, stratify=Y
+    X, Y, test_size=0.2, random_state=semilla, stratify=Y
 )
 
 #%% Métricas de evaluación
-# Vamos a usar accuracy también ya que vimos en el análisis exploratorio que el conjunto total estaba balanceado 
-# y porque al igual que en la parte anterior no hay criterio para priorizar recall o precision por ejemplo 
-# también vamos a utilizar la matriz de confusión 
+# Vamos a usar accuracy, ya que en el análisis exploratorio vimos que el conjunto total estaba balanceado 
+# y porque, al igual que en la parte anterior, no hay criterio para priorizar tanto recall como precision. 
+# También vamos a utilizar la matriz de confusión.
 
-#%%
+#%% 
 
-cv = KFold(n_splits=5, shuffle=True, random_state=42)
+cv = KFold(n_splits=5, shuffle=True, random_state=semilla)
 
 resultados_arbol = []
 
 for prof in range(1, 16):
     for crit in ["gini", "entropy"]:
-        arbol = DecisionTreeClassifier(criterion=crit, max_depth=prof, random_state=42)
+        arbol = DecisionTreeClassifier(criterion=crit, max_depth=prof, random_state=semilla)
         res = cross_validate(arbol, X_dev, Y_dev, cv=cv,
                              scoring='accuracy', return_train_score=True)
         resultados_arbol.append({
@@ -680,7 +661,7 @@ ax.legend()
 #Tuvo un desempeño de 0.78 levemente mejor a la misma profundidad pero con gini (0.77)
 
 #%% Miramos matriz de confusion del mejor modelo dentro de los params de la consigna 
-mejor_arbol = DecisionTreeClassifier(criterion='entropy', max_depth= 10, random_state= 42)
+mejor_arbol = DecisionTreeClassifier(criterion='entropy', max_depth= 10, random_state= semilla)
 y_pred_cv = cross_val_predict(mejor_arbol, X_dev, Y_dev, cv=cv)
 matriz_conf = confusion_matrix(Y_dev, y_pred_cv, normalize = "true") 
 
@@ -719,6 +700,7 @@ matriz_held = confusion_matrix(Y_held_out, mejor_arbol_pred, normalize="true")
 #%% =============================================================================
 # Predecir las clases de las imágenes del conjunto de evaluación  
 # ===============================================================================
+#%%
 
 X_catedra = evaluacion.drop(columns="id")
 
