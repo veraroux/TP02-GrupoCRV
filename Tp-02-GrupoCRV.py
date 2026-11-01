@@ -3,6 +3,7 @@
 Materia: Laboratorio de datos - FCEyN - UBA
 Comisión A
 Autoras  : Aviles Clara, Cabrera Maria Rosario Y Roux Vera
+Grupo: GrupoCRV
 Fecha  : 2026-01-11
 Descripción: En el siguiente archivo se encuentran de forma ordenada todas las etapas del Trabajo Práctico N2 de la materia. 
              El mismo está divido por secciones, comenzando con el análisis exploratorio del data set de Quick, Draw!. Luego se encuentran las secciones 
@@ -613,7 +614,7 @@ X_dev , X_held_out, Y_dev, Y_held_out = train_test_split(
 # y porque, al igual que en la parte anterior, no hay criterio para priorizar tanto recall como precision. 
 # También vamos a utilizar la matriz de confusión.
 
-#%% Giny y entropy para el árbol de decisiones (Ampliamos la profundidad pero luego en el análisis
+#%% Gini y entropy para el árbol de decisiones (Ampliamos la profundidad pero luego en el análisis
 # usamos, por consigna, hasta profundidad = 10)
 
 cv = KFold(n_splits=5, shuffle=True, random_state=semilla)
